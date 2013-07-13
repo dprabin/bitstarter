@@ -26,6 +26,18 @@ var program = require('commander');
 var cheerio = require('cheerio');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
+var URL_DEFAULT = "http://thawing-sands-3939.herokuapp.com";
+
+var assertUrlExists = function(url) {
+    rest.get(url).on('complete', function(result){
+        if(result instanceof Error){
+            console.log('Error: ' + result.message);
+            this.retry(5000); //retry this after 5 seconds
+        } else {
+            //console.log(result); //log the result
+        }
+    });
+};
 
 var assertFileExists = function(infile) {
     var instr = infile.toString();
@@ -56,8 +68,7 @@ var checkHtmlFile = function(htmlfile, checksfile) {
 };
 
 var clone = function(fn) {
-    // Workaround for commander.js issue.
-    // http://stackoverflow.com/a/6772648
+    // Workaround for commander.js issue. as described in http://stackoverflow.com/a/6772648
     return fn.bind({});
 };
 
@@ -65,6 +76,7 @@ if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-u, --url <url>', 'URL to the site to check', clone(assertUrlExists), URL_DEFAULT)
         .parse(process.argv);
     var checkJson = checkHtmlFile(program.file, program.checks);
     var outJson = JSON.stringify(checkJson, null, 4);
